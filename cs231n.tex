@@ -40,7 +40,7 @@
 \tableofcontents
 \newpage
 
-\section{Lecture 1}
+\section{Lecture 1: Big Picture}
 \subsection{Motivation}
 Estimated that $>$ 85\% of data online is "pixel-data". So image data is like the "dark mattaer" of the web - tons of it out there that sits, un-nalyzed.
 
@@ -52,5 +52,95 @@ Edge detection $\rightarrow$ Objects are compositions of basic shapes when viewe
 
 \textbf{Point of the course}
 \textit{Image classification} - what is in whole image X?
+
+\section{Lecture 2: Image Classification Pipeline}
+\subsection{Input}
+An image is just a large matrix of numbers to a computer. Imagine one sub-matrix for each channel R, G, B, that's 800 x 600, and each value is between 0 - 255 (intensity). (e.g. 800 x 600 x 3).\\
+
+
+\textbf{Challenges}:
+\begin{enumerate}
+\item Viewpoint variation: moving the camera will change the entire pixel grid
+\item Illumination conditions: changes intensity values
+\item Deformation: Shape changes for object
+\item Occlusion: only see a small portion of object
+\item Background clutter: looks similar to BG
+\item Intraclass variation: many different "types" of object X
+\end{enumerate}
+
+Difficulty is that \textbf{you can't sit down and write an explicit algorithm} to classify these images.  
+
+\subsection{Data Driven Approach}
+The core idea that we should \textbf{train} the model with lots of training images and known labels, which spits out a \textbf{model}. Use \textbf{model} in production to actual recognize unknown images.
+
+\subsection{Simple Classifier: Nearest Neighbor}
+\begin{enumerate}
+\item Training step: do nothing except memorize all training data (store in some representation).
+\item Prediction step: take new image and find the most similar image in the training set, predict that class.
+\end{enumerate}
+
+\textbf{Note: lecture shows the short code for this algo.}
+
+
+\subsubsection{How to compare two images?}
+\textbf{L1 distance (Manhattan)}: compare individual pixels between two images, take abs, sum across all pixels. One dumbish way to do this. Where $p$ is a point/pixel in the image:
+$d_1(I_1, I_2) = \sum_p(\mid I_1^p - I_2^p \mid)$\\
+
+\textbf{L2 distance (Euclidean)}: Sqrt of the sum of the squares of the (difference between each two points). Where $p$ is a point/pixel in the image: $d_2(I_1, I_2) = \sqrt{\sum_p(I_1^p - I_2^p)^2}$
+
+\subsubsection{How fast?}
+Train O(1), predict O(N). Really slow. We want classifiers to be slow to train but fast to test by comparison. 
+
+\subsubsection{Small adjustment: k-nearest neighbors}
+Don't just look for the nearest neighbor: check the k-nearest neighbors, and "take a vote" based on these neighbors. Generally a \textbf{majority} vote.
+
+\subsubsection{Limitations}
+Issue: L1 and L2 distance not so good at handling small perceptual differences for images: shifting image left / right, redactions, tints... Argument is that the distances can be made arbitrarily similar even though the actual two images are very perceptually different. \\
+
+\textbf{Curse of dimensionality}: Your nearest neighbors need to be close by to the test image to have confidence in the classification. Bad growth with image size: need a \textit{lot more training data} to densely cover space. 
+
+\subsection{Hyperparameters}
+Choices about the algorithm (not about the data itself) that you have to make. E.g., which distance metric, what value of K.
+
+\subsubsection{Choosing Hyperparameters}
+\textbf{Best plan: separate data into THREE separate partitions}
+\begin{enumerate}
+\item Training set: (most of data) - train algorithm with many different hyperparameters choices on training set.
+\item Validation set: use results of model on the validation set to choose best hyperparameters. 
+\item Test set: when everything is \textbf{done}, run \textbf{once} on your test set. Report that number. \textbf{You want to know how your algorithm performs on unseen data!} 
+\end{enumerate}
+
+\subsection{Cross validation}
+Partition training data into many "folds". Try each fold as a validation set. Average results across all folds. This is mostly used in smaller datasets are not deep learning. \textbf{This is more of a gold standard for generalizing your hyperparameters}, but this is very computationally expensive. 
+
+\subsection{Linear Classification Algorithm}
+Linear classifier is an \textbf{example of a \textit{parametric model}}.
+
+\subsubsection{General Parametric Model}
+Image ($x$) + Parameters ($W$) $\rightarrow f(x, W) \rightarrow$ a score for each of the possible classes. \\
+
+I.e. we \textbf{do not keep the training images} during the \textbf{test phase}. We \textbf{summarize them} in the set of \textbf{parameters $W$} after training.\\
+
+Difficulty is in \textbf{choosing structure for function f}. 
+
+\subsubsection{Linear Classifier}
+Just \textbf{multiply weights and inputs}. \\
+
+$f(x, W) = Wx + b$.\\
+
+Assuming input image is 32 x 32 x 3, so take $x$ as a column vector of $32 x 32 x 3 = 3072$ values. To get 10 classes for output (10 x 1 vector), $W$ must have dimension 10 x 3072. Each weight row corresponds to weights for that class.  \\
+
+$b$ is a constant bias vector of $10 x 1$ in this case which is some class-independant data (example given is if dataset is unbalanced wit more cats than dogs, bias element for cats would be higher than dogs).\\
+
+A nice property: can \textbf{visualize the rows in the weight matrix} to see what kind of images the classifier has learnt! I.e. what the weights for that category are most sensitive to.\\
+
+Problem: \textbf{linear classifier can only learn one template for each class}. I.e, learnt weights show a horse-like image with two heads (since it could be oriented either way), etc.\\
+
+\textbf{Linear classifier} is just learning \textbf{linear decision boundaries} (lines / planes / hyperplanes) to separate all classes. Lecture at 56 mins has great example of datasets where this decision region boundary fails miserably.  
+
+\textbf{Figuring out how to get the correct weight matrix: next lecture}.
+
+
+
 
 \end{document}
